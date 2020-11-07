@@ -17,7 +17,6 @@ public class Application {
         sendingHandler.start();
         // Main thread: start server, listen for messages (receiving commander thread)
         Server.getInstance().StartServer(Constants.DEFAULT_PORT);
-        Server.getInstance().StopServer();
         // Start listening
         while (true) {
             try {
@@ -30,13 +29,14 @@ public class Application {
                 System.err.println("Error in connection attempt.");
             }
         }
-        // Join
+        // Join the Side thread
         try {
             sendingHandler.join();
         }catch (InterruptedException e)
         {
             e.printStackTrace();
         }
+        Server.getInstance().StopServer();
         ThreadPool.getInstance().ShutDown();
     }
 

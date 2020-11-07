@@ -7,15 +7,21 @@ import java.util.Arrays;
 import com.minhquan.vector.*;
 
 public class Message implements Serializable{
-    private String message;
+    private int message;
     private VectorProcessTuple vtpBuffer;
     private int[] timeStamp;
 
-    public String getMessage() {
+    public Message(int message, VectorProcessTuple vtpBuffer, int[] timeStamp) {
+        this.message = message;
+        this.vtpBuffer = vtpBuffer;
+        this.timeStamp = timeStamp;
+    }
+
+    public int getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
+    public void setMessage(int message) {
         this.message = message;
     }
 

@@ -3,16 +3,19 @@ package com.minhquan;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import com.minhquan.model.*;
+
+import com.minhquan.network.Client;
 import com.minhquan.vector.*;
+import com.minhquan.model.*;
+
 
 public class Process {
     // Warning: race condition -> Deadlock !!!!
-    private List<Message> messageBuffer;
-    private VectorProcessTuple vector;
-    private VectorClock localClock;
+    private final List<Message> messageBuffer;
+    private final VectorProcessTuple vector;
+    private final VectorClock localClock;
     private int totalMessageDelivered;
-    // Final -> thread safe
+    // Thread safe
     private final int pid;
 
     public int getTotalMessageDelivered() {
@@ -72,23 +75,32 @@ public class Process {
 
     // Sending task
     private class SenderTask implements Runnable {
-        private int messageContent;
+        private final int messageContent;
         private int pidToSend;
 
         public SenderTask(int message, int pidToSend) {
-
+            messageContent = message;
+            this.pidToSend = pidToSend;
         }
+
         @Override
         public void run() {
-
+            String desIP = "localhost";
+            int desPort = 34568;
+            // Create socket to send
+            Client clientToSend = new Client(desIP, desPort);
+            // Compose new message to send
+            Message newMessage = new Message(messageContent, vector, localClock.getTimeStamp());
+            clientToSend.SendMessage(newMessage);
         }
     }
 
     // Receiving task
     private class ReceiverTask implements Runnable {
+        private final Socket socket;
 
         public ReceiverTask(Socket socket) {
-
+            this.socket = socket;
         }
 
         @Override
