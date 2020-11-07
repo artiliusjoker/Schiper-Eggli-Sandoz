@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="SES">
+    <output-path>$PROJECT_DIR$/out/artifacts/SES</output-path>
+    <root id="root">
+      <element id="archive" name="SES.jar">
+        <element id="module-output" name="SES" />
+      </element>
+    </root>
+  </artifact>
+</component>

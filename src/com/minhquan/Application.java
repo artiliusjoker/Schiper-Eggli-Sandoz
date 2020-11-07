@@ -1,41 +1,43 @@
 package com.minhquan;
 
+import java.net.Socket;
 import java.util.Random;
 import com.minhquan.thread.ThreadPool;
+import com.minhquan.network.*;
 
 public class Application {
     public static void main(String[] args) {
-//        // Get other process addresses from config file
-//        Process process = new Process(1);
-//        process.Start();
-//        // Init thread pool singleton (worker threads)
-//        ThreadPool.getInstance();
-//        // Side thread: for randomize sending delay (sending commander thread)
-//        Thread sendingHandler = new Thread(new SendingMessageHandler(process, ThreadPool.getInstance()));
-//        sendingHandler.start();
-//        // Main thread: start server, listen for messages (receiving commander thread)
-//        Server.getInstance().StartServer(Constants.DEFAULT_PORT);
-//        Server.getInstance().StopServer();
-//        // Start listening
-//        while (true) {
-//            try {
-//                Socket socketForMessage = Server.getInstance().getServerSocket().accept();
-//                // Give job to workers
-//                ThreadPool.getInstance().ExecuteTask(process.CreateReceiverTask(socketForMessage));
-//                if(process.getTotalMessageDelivered() == 2)
-//                    break;
-//            } catch (Exception e) {
-//                System.err.println("Error in connection attempt.");
-//            }
-//        }
-//        // Join
-//        try {
-//            sendingHandler.join();
-//        }catch (InterruptedException e)
-//        {
-//            e.printStackTrace();
-//        }
-//        ThreadPool.getInstance().ShutDown();
+        // Get other process addresses from config file
+        Process process = new Process(1);
+        process.Start();
+        // Init thread pool singleton (worker threads)
+        ThreadPool.getInstance();
+        // Side thread: for randomize sending delay (sending commander thread)
+        Thread sendingHandler = new Thread(new SendingMessageHandler(process, ThreadPool.getInstance()));
+        sendingHandler.start();
+        // Main thread: start server, listen for messages (receiving commander thread)
+        Server.getInstance().StartServer(Constants.DEFAULT_PORT);
+        Server.getInstance().StopServer();
+        // Start listening
+        while (true) {
+            try {
+                Socket socketForMessage = Server.getInstance().getServerSocket().accept();
+                // Give job to workers
+                ThreadPool.getInstance().ExecuteTask(process.CreateReceiverTask(socketForMessage));
+                if(process.getTotalMessageDelivered() == 2)
+                    break;
+            } catch (Exception e) {
+                System.err.println("Error in connection attempt.");
+            }
+        }
+        // Join
+        try {
+            sendingHandler.join();
+        }catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        ThreadPool.getInstance().ShutDown();
     }
 
     private static class SendingMessageHandler implements Runnable{
