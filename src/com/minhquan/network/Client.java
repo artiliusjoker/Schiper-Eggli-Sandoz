@@ -9,11 +9,23 @@ import com.minhquan.model.Message;
 public class Client {
     Socket socketForSending = null;
 
-    public Client(String destIP, int destPort) {
+    public Client(Address address) {
         try {
-            socketForSending = new Socket(destIP, destPort);
+            socketForSending = new Socket(address.getHostName(), address.getPort());
         } catch (Exception e) {
-            System.err.println("Cannot connect to the server, try again later.");
+            System.err.println("Cannot connect to the process, try again later.");
+            e.printStackTrace();
+        }
+    }
+
+    public void Close(){
+        try {
+            if (socketForSending != null)
+            {
+                socketForSending.close();
+            }
+        }catch (IOException e)
+        {
             e.printStackTrace();
         }
     }

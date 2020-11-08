@@ -15,12 +15,12 @@ public class VectorClock {
         this.timeStamp = array;
     }
 
-    public int[] getTimeStamp() {
+    public synchronized int[] getTimeStamp() {
         return timeStamp;
     }
 
     public synchronized void IncrementAt(int index) {
-        ++timeStamp[index];
+        timeStamp[index] = timeStamp[index] + 1;
     }
 
     public synchronized void UpdateClock(VectorClock vectorToCheck){

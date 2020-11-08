@@ -2,6 +2,8 @@ package com.minhquan.thread;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import com.minhquan.Constants;
 
 public class ThreadPool {
@@ -17,9 +19,24 @@ public class ThreadPool {
             instance = new ThreadPool();
         return instance;
     }
+
     public void ShutDown(){
-        pool.shutdown();
+        try {
+            pool.shutdown();
+            pool.awaitTermination(Constants.MAX_DELAY_INTERVAL, TimeUnit.SECONDS);
+        }
+        catch (InterruptedException e) {
+            System.err.println("Tasks interrupted");
+        }
+        finally {
+            if (!pool.isTerminated()) {
+                System.err.println("Cancel non-finished tasks");
+            }
+            pool.shutdownNow();
+            System.out.println("Shutdown finished");
+        }
     }
+    
     public synchronized void ExecuteTask(Runnable newTask){
         pool.execute(newTask);
     }

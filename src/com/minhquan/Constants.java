@@ -8,4 +8,5 @@ public class Constants {
     public static final int PROCESS_SIZE = 15;
     public static final int MAX_DELAY_INTERVAL = 3;
     public static final int DEFAULT_PORT = 34567;
+    public static final int TEST_MESSAGE_SIZE = 10;
 }

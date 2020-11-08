@@ -1,11 +1,12 @@
 package com.minhquan.vector;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.minhquan.model.ProcessTuple;
 
-public class VectorProcessTuple {
+public class VectorProcessTuple implements Serializable {
     private List<ProcessTuple> vector;
 
     public VectorProcessTuple(){

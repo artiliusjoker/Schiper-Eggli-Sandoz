@@ -2,7 +2,9 @@ package com.minhquan.model;
 
 import com.minhquan.vector.VectorClock;
 
-public class ProcessTuple {
+import java.io.Serializable;
+
+public class ProcessTuple implements Serializable {
     private int pid;
     private VectorClock timestamp;
 
