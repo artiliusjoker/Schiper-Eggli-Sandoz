@@ -1,39 +1,33 @@
 package com.minhquan.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.minhquan.Constants;
 import com.minhquan.vector.*;
 
 public class Message implements Serializable{
     private final String message;
-    private VectorProcessTuple vtpBuffer;
-    private int[] timeStamp;
+    private final ArrayList<ProcessTuple>vectorBuffer;
+    private final int[] timeStamp;
 
-    public Message(int message, VectorProcessTuple vtpBuffer, int[] timeStamp) {
+    public Message(int message, int[] timeStamp, ArrayList<ProcessTuple> currentBuffer) {
         this.message = "Message " + message;
-        this.vtpBuffer = vtpBuffer;
         this.timeStamp = timeStamp;
+        vectorBuffer = currentBuffer;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public VectorProcessTuple getVtpBuffer() {
-        return vtpBuffer;
-    }
-
-    public void setVtpBuffer(VectorProcessTuple vtpBuffer) {
-        this.vtpBuffer = vtpBuffer;
+    public ArrayList<ProcessTuple> getVtpBuffer() {
+        return vectorBuffer;
     }
 
     public int[] getTimeStamp() {
         return timeStamp;
-    }
-
-    public void setTimeStamp(int[] timeStamp) {
-        this.timeStamp = timeStamp;
     }
 
     @Override
@@ -41,6 +35,7 @@ public class Message implements Serializable{
         return "Message{" +
                 "message='" + message + '\'' +
                 ", timeStamp=" + Arrays.toString(timeStamp) +
+                ", vector=" + vectorBuffer.size() +
                 '}';
     }
 }

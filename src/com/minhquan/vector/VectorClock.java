@@ -1,8 +1,9 @@
 package com.minhquan.vector;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class VectorClock {
+public class VectorClock implements Serializable {
     private int[] timeStamp;
 
     public VectorClock(int numOfProcesses){
@@ -17,6 +18,10 @@ public class VectorClock {
 
     public synchronized int[] getTimeStamp() {
         return timeStamp;
+    }
+
+    public synchronized int[] CloneTimeStamp(){
+        return Arrays.copyOf(this.timeStamp, this.timeStamp.length);
     }
 
     public synchronized void IncrementAt(int index) {
