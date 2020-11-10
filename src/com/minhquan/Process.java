@@ -18,7 +18,6 @@ public class Process {
     private final List<Message> messageBuffer; // Buffer for incoming messages not fulfil conditions
     private final VectorProcessTuple vectorVPofProcess; // vector<pid, timestamps>
     private final VectorClock localClock; // vector<int>
-    private int totalMessageDelivered; // number of messages delivered
     // Thread safe
     private final int pid;
     private final ArrayList<Address> addresses;
@@ -26,20 +25,12 @@ public class Process {
     private final int defaultPort;
     private int messageSentCount; // only 1 thread uses it for counting messages sent by this process
 
-    public synchronized int getTotalMessageDelivered() {
-        return totalMessageDelivered;
-    }
-
     public int getPid() {
         return pid;
     }
 
     public synchronized VectorProcessTuple getVectorVPofProcess() {
         return vectorVPofProcess;
-    }
-
-    private synchronized void TotalMessagesIncrement(){
-        ++totalMessageDelivered;
     }
 
     public Process(int pid, int defaultPort){
@@ -60,11 +51,13 @@ public class Process {
 
         // Num of messages sent
         this.messageSentCount = 0;
-        // Num of messages received from other hosts (delivered)
-        this.totalMessageDelivered = 0;
 
         // Random instance
         this.rand = new Random();
+    }
+
+    public synchronized int getMessageSentCount() {
+        return messageSentCount;
     }
 
     public int[] getLocalClock() {
@@ -152,10 +145,13 @@ public class Process {
 
         // Increment clock for current process (an even occurs)
         localClock.IncrementAt(pid - 1);
-        TotalMessagesIncrement();
-        if(getTotalMessageDelivered() == Constants.TEST_MESSAGE_SIZE)
+
+        if(getMessageSentCount() == (Constants.TEST_MESSAGE_SIZE - 1) )
         {
-            Server.getInstance().StopServer();
+            if(messageBuffer.isEmpty())
+            {
+                Server.getInstance().StopServer();
+            }
         }
     }
 
@@ -264,7 +260,7 @@ public class Process {
                 // Randomize a process to send message (except itself)
                 int randomProcessID;
                 do{
-                    randomProcessID = rand.nextInt(2) + 1; // Process 1, process 2,..., process 15
+                    randomProcessID = rand.nextInt(Constants.PROCESS_SIZE) + 1; // Process 1, process 2,..., process 15
                 }while (randomProcessID == getPid());
 
                 // Give this sending job to workers
