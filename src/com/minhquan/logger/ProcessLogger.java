@@ -2,11 +2,13 @@ package com.minhquan.logger;
 
 import com.minhquan.Process;
 import com.minhquan.model.Message;
+import com.minhquan.model.ProcessTuple;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ProcessLogger {
@@ -29,12 +31,12 @@ public class ProcessLogger {
             if(logFile.exists())
             {
                 if(!logFile.delete())
-                    throw new IOException("Fatal : cannot delete old log files, close this process !!!");
+                    throw new IOException("Fatal : cannot delete the old log file, close this process !!!");
             }
             if (logFile.createNewFile()) {
                 System.out.println("Log created: " + logFile.getName());
             } else {
-                System.out.println("Fatal : cannot create log file, close this process !!!");
+                System.out.println("Fatal : cannot create new log file, close this process !!!");
                 System.exit(1);
             }
         } catch (IOException e) {
@@ -63,8 +65,14 @@ public class ProcessLogger {
                     bw.newLine();
                     bw.write(message.toString());
                     bw.newLine();
-                    bw.write("SENDER : PROCESS : #" + message.getPidSender());
+                    bw.write("SENDER : PROCESS #" + message.getPidSender());
                     bw.newLine();
+                    bw.write("MESSAGE'S V_M :\n");
+                    ArrayList<ProcessTuple> messageTuples = message.getVtpBuffer();
+                    for (ProcessTuple messageTuple : messageTuples) {
+                        bw.write(messageTuple.toString());
+                        bw.newLine();
+                    }
                     break;
                 }
                 case BUFFER_MESSAGE_EVENT:{
@@ -72,6 +80,12 @@ public class ProcessLogger {
                     int[]currentTime = currentProcess.getLocalClock();
                     bw.write("CURRENT CLOCK: " + Arrays.toString(currentTime));
                     bw.newLine();
+                    bw.write("MESSAGE'S V_M :\n");
+                    ArrayList<ProcessTuple> processTuples = message.getVtpBuffer();
+                    for (ProcessTuple messageTuple : processTuples) {
+                        bw.write(messageTuple.toString());
+                        bw.newLine();
+                    }
                     bw.write(message.toString());
                     bw.newLine();
                     break;
@@ -81,6 +95,12 @@ public class ProcessLogger {
                     int[]currentTime = currentProcess.getLocalClock();
                     bw.write("CURRENT CLOCK: " + Arrays.toString(currentTime));
                     bw.newLine();
+                    bw.write("PROCESS'S V_TP :\n");
+                    ArrayList<ProcessTuple> processTuples = currentProcess.getVectorVPofProcess().CloneVector();
+                    for (ProcessTuple processTuple : processTuples) {
+                        bw.write(processTuple.toString());
+                        bw.newLine();
+                    }
                     bw.write(message.toString());
                     bw.newLine();
                 }

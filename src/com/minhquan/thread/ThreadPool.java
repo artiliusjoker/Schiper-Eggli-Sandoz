@@ -12,6 +12,7 @@ public class ThreadPool {
 
     private ThreadPool(){
         pool = Executors.newFixedThreadPool(Constants.MAX_POOL_SIZE);
+        //pool = Executors.newSingleThreadExecutor();
     }
     public static ThreadPool getInstance()
     {
@@ -33,7 +34,7 @@ public class ThreadPool {
                 System.err.println("Cancel non-finished tasks");
             }
             pool.shutdownNow();
-            System.out.println("Shutdown finished");
+            System.out.println("SES algorithm finished !!!");
         }
     }
     

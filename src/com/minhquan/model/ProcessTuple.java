@@ -26,7 +26,7 @@ public class ProcessTuple implements Serializable {
 
     @Override
     public String toString() {
-        return "ProcessTuple{" +
+        return "\tTuple: {" +
                 "pid=" + pid +
                 ", timestamp=" + Arrays.toString(timeStamp) +
                 '}';

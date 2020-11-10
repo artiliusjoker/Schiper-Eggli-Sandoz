@@ -28,16 +28,41 @@ public class VectorClock implements Serializable {
         this.timeStamp = timeStamp;
     }
 
-    public static boolean LessThanEqualTo(int[]vector1, int[] vector2)
+    // t != Tpi for all elements
+    public static boolean StrictDiff(int[]tMessage, int[] tPi)
     {
-        for (int i = 0; i < vector1.length; i++)
+        for (int i = 0; i < tMessage.length; i++)
         {
-            if (!(vector1[i] <= vector2[i]))
+            if ((tMessage[i] == tPi[i]))
             {
                 return false;
             }
         }
         return true;
+    }
+
+    // t <= Tpi for all elements
+    public static boolean LessThanOrEqualTo(int[]tMessage, int[] tPi)
+    {
+        for (int i = 0; i < tMessage.length; i++)
+        {
+            if ((tMessage[i] > tPi[i]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // t < Tpi for all elements
+    public static boolean StrictLessThan(int[]tMessage, int[] tPi)
+    {
+//        System.out.println("\nSo sanh");
+//        System.out.println(Arrays.toString(tMessage) + "//"  + Arrays.toString(tPi));
+
+        //boolean strictDiff = StrictDiff(tMessage, tPi);
+
+        return LessThanOrEqualTo(tMessage, tPi);
     }
 
     public static int[] Max(int[]timeStamp1, int[] timeStamp2)

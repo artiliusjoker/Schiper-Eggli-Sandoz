@@ -16,7 +16,7 @@ import com.minhquan.model.*;
 public class Process {
     // Warning: race condition -> Deadlock !!!!
     private final List<Message> messageBuffer; // Buffer for incoming messages not fulfil conditions
-    private final VectorProcessTuple vector; // vector<pid, timestamps>
+    private final VectorProcessTuple vectorVPofProcess; // vector<pid, timestamps>
     private final VectorClock localClock; // vector<int>
     private int totalMessageDelivered; // number of messages delivered
     // Thread safe
@@ -26,12 +26,16 @@ public class Process {
     private final int defaultPort;
     private int messageSentCount; // only 1 thread uses it for counting messages sent by this process
 
-    public int getTotalMessageDelivered() {
+    public synchronized int getTotalMessageDelivered() {
         return totalMessageDelivered;
     }
 
     public int getPid() {
         return pid;
+    }
+
+    public synchronized VectorProcessTuple getVectorVPofProcess() {
+        return vectorVPofProcess;
     }
 
     private synchronized void TotalMessagesIncrement(){
@@ -50,7 +54,7 @@ public class Process {
 
         this.localClock = new VectorClock(Constants.PROCESS_SIZE);
         // Vector <processID, clock>
-        this.vector = new VectorProcessTuple(Constants.PROCESS_SIZE);
+        this.vectorVPofProcess = new VectorProcessTuple(Constants.PROCESS_SIZE);
         // Buffer for waiting messages
         this.messageBuffer = new LinkedList<>();
 
@@ -107,7 +111,7 @@ public class Process {
                 ThreadPool.getInstance().ExecuteTask(CreateReceiverTask(socketForMessage));
 
             } catch (IOException e) {
-                System.out.println("Done ! Stopping process...");
+                System.out.println("Receiving done ! Stopping listening thread !!");
                 break;
             }
         }
@@ -126,7 +130,8 @@ public class Process {
     private synchronized void CheckMessageBuffer(Message trigger) {
         for(int i = 0; i < messageBuffer.size(); i++) {
             Message message = messageBuffer.get(i);
-            if (vector.DoesFulfilDeliveryCondition(new ProcessTuple(pid, localClock.CloneTimeStamp()))) {
+            ProcessTuple currentTuple = new ProcessTuple(pid, localClock.CloneTimeStamp());
+            if (VectorProcessTuple.DoesFulfilDeliveryCondition(message, currentTuple)) {
                 DeliverMessage(message);
                 messageBuffer.remove(i);
                 ProcessLogger.GetInstance().LogMessageDeliveredFromBuffer(trigger, message);
@@ -138,23 +143,27 @@ public class Process {
     // Deliver message from buffer
     private synchronized void DeliverMessage(Message message) {
         // Update knowledge of what should have occurred
-        vector.Merge(message.getVtpBuffer());
+        vectorVPofProcess.Merge(message.getVtpBuffer());
 
         // Merge Vector clock
         int[] temp = localClock.CloneTimeStamp();
         int[] max = VectorClock.Max(temp, message.getTimeStamp());
-        this.localClock.OverrideClock(max);
+        localClock.OverrideClock(max);
 
         // Increment clock for current process (an even occurs)
-        this.localClock.IncrementAt(pid - 1);
-
-        System.out.println(message.toString());
+        localClock.IncrementAt(pid - 1);
+        TotalMessagesIncrement();
+        if(getTotalMessageDelivered() == Constants.TEST_MESSAGE_SIZE)
+        {
+            Server.getInstance().StopServer();
+        }
     }
 
     // Receive messages
     private synchronized void Receive(Message incomingMessage)
     {
-        if (vector.DoesFulfilDeliveryCondition(new ProcessTuple(pid, localClock.CloneTimeStamp()))) {
+        ProcessTuple currentTuple = new ProcessTuple(pid, localClock.CloneTimeStamp());
+        if (VectorProcessTuple.DoesFulfilDeliveryCondition(incomingMessage, currentTuple)) {
             DeliverMessage(incomingMessage);
             ProcessLogger.GetInstance().LogMessage(incomingMessage, ProcessLogger.DELIVER_MESSAGE_EVENT);
             CheckMessageBuffer(incomingMessage);
@@ -187,19 +196,22 @@ public class Process {
             Address address = addresses.get(pidToSend - 1);
             // Create socket to send
             Client clientToSend = new Client(address);
-            // Compose new message to send
             localClock.IncrementAt(pid - 1);
-            int[] temp = localClock.CloneTimeStamp();
-            String messageContent = Integer.toString(messageOrder);
-            Message newMessage = new Message(messageContent, temp, vector.CloneVector(), pid);
+
+            // Compose new message to send
+            int[] temp = localClock.CloneTimeStamp(); // Clock message
+            String messageContent = Integer.toString(messageOrder); // Content
+            ArrayList<ProcessTuple>messageVP = vectorVPofProcess.CloneVector();
+
+            Message newMessage = new Message(messageContent, temp, messageVP, pid);
             ProcessLogger.GetInstance().LogMessage(newMessage, ProcessLogger.SEND_MESSAGE_EVENT);
             // Send message
             clientToSend.SendMessage(newMessage);
             clientToSend.Close();
 
-            // Insert vtp
+            // Insert vtp (or override)
             ProcessTuple newEntry = new ProcessTuple(pidToSend, temp);
-            vector.InsertList(newEntry);
+            vectorVPofProcess.InsertList(newEntry);
         }
     }
 
@@ -216,7 +228,7 @@ public class Process {
             // Todo: get message from socket -> check condition:
             // False : buffer the message
             // True : receive, update variables
-            ObjectInputStream ois = null;
+            ObjectInputStream ois;
             Message message;
 
             try {
@@ -227,7 +239,6 @@ public class Process {
                 // Deserialize
                 message = (Message) bufferObj;
 
-                TotalMessagesIncrement();
                 // Check condition in Receive(message)
                 Receive(message);
             }
@@ -244,12 +255,7 @@ public class Process {
 
         @Override
         public void run() {
-            // Wait to run other processes
-            try {
-                Thread.sleep(1000 * 2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+
             // Randomize sending intervals
             int randomDelay = rand.nextInt(Constants.MAX_DELAY_INTERVAL) + 1;
 
@@ -260,6 +266,7 @@ public class Process {
                 do{
                     randomProcessID = rand.nextInt(2) + 1; // Process 1, process 2,..., process 15
                 }while (randomProcessID == getPid());
+
                 // Give this sending job to workers
                 int messageContent = messageSentCount + 1; // Message 1 , message 2,..., message 150
                 ThreadPool.getInstance().ExecuteTask(CreateSenderTask(messageContent, randomProcessID));
@@ -268,16 +275,7 @@ public class Process {
                 try { Thread.sleep(1000 * randomDelay); }
                 catch (InterruptedException e) { e.printStackTrace(); }
                 ++messageSentCount;
-
                 // Continue it's duty in while loop
-            }
-            // Sent enough messages, stops the listening thread commander if delivers enough messages
-            while (true)
-            {
-                if(getTotalMessageDelivered() == Constants.TEST_MESSAGE_SIZE){
-                    Server.getInstance().StopServer();
-                    break;
-                }
             }
         }
     }
