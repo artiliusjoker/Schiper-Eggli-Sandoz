@@ -117,6 +117,7 @@ public class Process {
         }
         Server.getInstance().StopServer();
         ThreadPool.getInstance().ShutDown();
+        System.out.println("SES algorithm finished in process #" + pid);
     }
 
     // Check buffer for buffered messages, deliver it if fulfil conditions
@@ -169,8 +170,8 @@ public class Process {
         }
     }
 
-    public SenderTask CreateSenderTask(int message, int pidToSend){
-        return new SenderTask(message, pidToSend);
+    public SenderTask CreateSenderTask(int message){
+        return new SenderTask(message);
     }
 
     public ReceiverTask CreateReceiverTask(Socket receivedSocket){
@@ -180,18 +181,36 @@ public class Process {
     // Sending task
     private class SenderTask implements Runnable {
         private final int messageOrder;
-        private final int pidToSend;
 
-        public SenderTask(int messageOrder, int pidToSend) {
+        public SenderTask(int messageOrder) {
             this.messageOrder = messageOrder;
-            this.pidToSend = pidToSend;
         }
 
         @Override
         public void run() {
-            Address address = addresses.get(pidToSend - 1);
-            // Create socket to send
-            Client clientToSend = new Client(address);
+            // Randomize a process to send message (except itself)
+            int randomProcessID;
+            Client clientToSend;
+            do{
+                // Check end
+                if(getMessageSentCount() == (Constants.TEST_MESSAGE_SIZE - 1) )
+                {
+                    if(messageBuffer.isEmpty())
+                    {
+                        Server.getInstance().StopServer();
+                        return;
+                    }
+                }
+
+                randomProcessID = rand.nextInt(Constants.PROCESS_SIZE) + 1; // Process 1, process 2,..., process 15
+                if(randomProcessID != getPid())
+                {
+                    Address address = addresses.get(randomProcessID - 1);
+                    clientToSend = new Client(address);
+                    if(clientToSend.getSocketForSending() != null) break;
+                }
+            }while (true);
+
             localClock.IncrementAt(pid - 1);
 
             // Compose new message to send
@@ -206,7 +225,7 @@ public class Process {
             clientToSend.Close();
 
             // Insert vtp (or override)
-            ProcessTuple newEntry = new ProcessTuple(pidToSend, temp);
+            ProcessTuple newEntry = new ProcessTuple(randomProcessID, temp);
             vectorVPofProcess.InsertList(newEntry);
         }
     }
@@ -257,15 +276,9 @@ public class Process {
 
             while (messageSentCount < Constants.TEST_MESSAGE_SIZE)
             {
-                // Randomize a process to send message (except itself)
-                int randomProcessID;
-                do{
-                    randomProcessID = rand.nextInt(Constants.PROCESS_SIZE) + 1; // Process 1, process 2,..., process 15
-                }while (randomProcessID == getPid());
-
                 // Give this sending job to workers
                 int messageContent = messageSentCount + 1; // Message 1 , message 2,..., message 150
-                ThreadPool.getInstance().ExecuteTask(CreateSenderTask(messageContent, randomProcessID));
+                ThreadPool.getInstance().ExecuteTask(CreateSenderTask(messageContent));
 
                 // Wait to send new messages (randomized delay interval)
                 try { Thread.sleep(1000 * randomDelay); }

@@ -34,7 +34,6 @@ public class ThreadPool {
                 System.err.println("Cancel non-finished tasks");
             }
             pool.shutdownNow();
-            System.out.println("SES algorithm finished !!!");
         }
     }
     

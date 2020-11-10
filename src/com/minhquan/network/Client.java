@@ -3,6 +3,7 @@ package com.minhquan.network;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import com.minhquan.model.Message;
 
@@ -13,9 +14,13 @@ public class Client {
         try {
             socketForSending = new Socket(address.getHostName(), address.getPort());
         } catch (Exception e) {
-            System.err.println("Cannot connect to the process, try again later.");
             e.printStackTrace();
+            socketForSending = null;
         }
+    }
+
+    public Socket getSocketForSending() {
+        return socketForSending;
     }
 
     public void Close(){
