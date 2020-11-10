@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import com.minhquan.Constants;
 
 public class ThreadPool {
-    private ExecutorService pool;
+    private final ExecutorService pool;
     private static ThreadPool instance = null;
 
     private ThreadPool(){

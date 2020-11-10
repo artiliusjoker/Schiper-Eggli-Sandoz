@@ -1,27 +1,23 @@
 package com.minhquan.model;
 
-import com.minhquan.Constants;
-import com.minhquan.vector.VectorClock;
-
 import java.io.Serializable;
 import java.util.Arrays;
 
 public class ProcessTuple implements Serializable {
-    private int pid;
-    private VectorClock timestamp;
-    private final int[] timeStamp;
+    private final int pid;
+    private int[] timeStamp;
 
     public ProcessTuple(int pid, int[]timeStamp){
         this.pid = pid;
         this.timeStamp = timeStamp;
     }
 
-    public int getPid() {
-        return pid;
+    public void setTimeStamp(int[] timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
-    public VectorClock getTimeStamp() {
-        return timestamp;
+    public int getPid() {
+        return pid;
     }
 
     public int[] getTimestamp() {

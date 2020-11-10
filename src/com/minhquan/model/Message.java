@@ -4,9 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.minhquan.Constants;
-import com.minhquan.vector.*;
-
 public class Message implements Serializable{
     private final String message;
     private final ArrayList<ProcessTuple>vectorBuffer;
@@ -32,10 +29,10 @@ public class Message implements Serializable{
 
     @Override
     public String toString() {
-        return "Message{" +
+        return "MESSAGE_CONTENT : {" +
                 "message='" + message + '\'' +
-                ", timeStamp=" + Arrays.toString(timeStamp) +
-                ", vector=" + vectorBuffer.size() +
+                ", timestamp=" + Arrays.toString(timeStamp) +
+                ", vector_tp=" + vectorBuffer.size() +
                 '}';
     }
 }

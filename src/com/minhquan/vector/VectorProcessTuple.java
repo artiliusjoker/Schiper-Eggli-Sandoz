@@ -18,37 +18,41 @@ public class VectorProcessTuple implements Serializable {
         vector = new ArrayList<>(processSize - 1);
     }
 
-    public List<ProcessTuple> getVector() {
+    public synchronized List<ProcessTuple> getVector() {
         return vector;
     }
 
     public synchronized boolean DoesFulfilDeliveryCondition(ProcessTuple currProcess)
     {
-        // There exists an (pid,V) in Sm and V <= Vi
+        // There exists an (pid,clock) in V_TP and clock <= local clock
+        // => Deliver the message
+        // else buffer it
         for (ProcessTuple bufferElementMessage : this.vector)
         {
             if (bufferElementMessage.getPid() == currProcess.getPid())
             {
-                return bufferElementMessage.getTimeStamp().LessThanEqualTo(currProcess.getTimeStamp());
+                return VectorClock.LessThanEqualTo(bufferElementMessage.getTimestamp(), currProcess.getTimestamp());
             }
         }
-        // The message contains no knowledge of what should have been received
+        // Not exists (pid,V) in Vm
+        // => The message contains no knowledge of what should have been received
+        // => Deliver the message
         return true;
     }
 
     public synchronized void InsertList(ProcessTuple newElement)
     {
         boolean flag = false;
-//        // If pid is in list update its timestamp
-//        for (ProcessTuple bufferElement : this.vector)
-//        {
-//            if(bufferElement.getPid() == newElement.getPid())
-//            {
-//                bufferElement.setTimeStamp(newElement.getTimeStamp());
-//                flag = true;
-//                break;
-//            }
-//        }
+        // If pid is in list update its timestamp
+        for (ProcessTuple bufferElement : this.vector)
+        {
+            if(bufferElement.getPid() == newElement.getPid())
+            {
+                bufferElement.setTimeStamp(newElement.getTimestamp());
+                flag = true;
+                break;
+            }
+        }
         // If pid not found in list add it to the list
         if (!flag)
         {
@@ -57,26 +61,25 @@ public class VectorProcessTuple implements Serializable {
 
     }
 
-    public synchronized void Merge(VectorProcessTuple incomingBuffer) {
-        if(incomingBuffer.getVector().isEmpty()) {
+    public synchronized void Merge(ArrayList<ProcessTuple> incomingBuffer) {
+        if(incomingBuffer.isEmpty()) {
             return;
         }
-        VectorProcessTuple resultBuffer = new VectorProcessTuple();
 
-        for(int i = 0; i < incomingBuffer.getVector().size(); ++i) {
-            boolean found = false;
-            ProcessTuple incomingS = incomingBuffer.getVector().get(i);
+        VectorProcessTuple resultBuffer = new VectorProcessTuple(Constants.PROCESS_SIZE);
+        for (ProcessTuple incomingElement : incomingBuffer) {
+            boolean foundFlag = false;
             // Check exist
-            for (ProcessTuple ownS : vector) {
-                if (incomingS.getPid() == ownS.getPid()) {
-                    found = true;
-                    int[] maxTimeStampArray = incomingS.getTimeStamp().Max(ownS.getTimeStamp().getTimeStamp());
+            for (ProcessTuple currentElement : vector) {
+                if (incomingElement.getPid() == currentElement.getPid()) {
+                    foundFlag = true;
+                    int[] maxTimeStampArray = VectorClock.Max(incomingElement.getTimestamp(), currentElement.getTimestamp());
                     VectorClock maxTimeStamp = new VectorClock(maxTimeStampArray);
-                    resultBuffer.getVector().add(new ProcessTuple(ownS.getPid(), maxTimeStamp.CloneTimeStamp()));
+                    resultBuffer.getVector().add(new ProcessTuple(currentElement.getPid(), maxTimeStamp.CloneTimeStamp()));
                 }
             }
-            if(!found) {
-                resultBuffer.getVector().add(incomingBuffer.getVector().get(i));
+            if (!foundFlag) {
+                resultBuffer.getVector().add(incomingElement);
             }
         }
         this.vector = resultBuffer.getVector();

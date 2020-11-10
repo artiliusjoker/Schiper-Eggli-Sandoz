@@ -16,10 +16,6 @@ public class VectorClock implements Serializable {
         this.timeStamp = array;
     }
 
-    public synchronized int[] getTimeStamp() {
-        return timeStamp;
-    }
-
     public synchronized int[] CloneTimeStamp(){
         return Arrays.copyOf(this.timeStamp, this.timeStamp.length);
     }
@@ -28,23 +24,15 @@ public class VectorClock implements Serializable {
         timeStamp[index] = timeStamp[index] + 1;
     }
 
-    public synchronized void UpdateClock(VectorClock vectorToCheck){
-        for (int i = 0; i < timeStamp.length; ++i) {
-            if (vectorToCheck.getTimeStamp()[i] > timeStamp[i]) {
-                timeStamp[i] = vectorToCheck.getTimeStamp()[i];
-            }
-        }
-    }
-
-    public void OverrideClock(int[] timeStamp){
+    public synchronized void OverrideClock(int[] timeStamp){
         this.timeStamp = timeStamp;
     }
 
-    public boolean StrictlyLessThan(VectorClock vectorToCompare)
+    public static boolean LessThanEqualTo(int[]vector1, int[] vector2)
     {
-        for (int i = 0; i < timeStamp.length; i++)
+        for (int i = 0; i < vector1.length; i++)
         {
-            if (!(timeStamp[i] < vectorToCompare.getTimeStamp()[i]))
+            if (!(vector1[i] <= vector2[i]))
             {
                 return false;
             }
@@ -52,27 +40,14 @@ public class VectorClock implements Serializable {
         return true;
     }
 
-    public boolean LessThanEqualTo(VectorClock vectorToCompare)
+    public static int[] Max(int[]timeStamp1, int[] timeStamp2)
     {
-        for (int i = 0; i < timeStamp.length; i++)
+        for (int i = 0; i < timeStamp1.length; i++)
         {
-            if (!(timeStamp[i] <= vectorToCompare.getTimeStamp()[i]))
-            {
-                return false;
-            }
+            if (timeStamp1[i] < timeStamp2[i])
+                timeStamp1[i] = timeStamp2[i];
         }
-        return true;
-    }
-
-    public int[] Max(int[] timeStamp2)
-    {
-        int[] max_array = timeStamp;
-        for (int i = 0; i < timeStamp.length; i++)
-        {
-            if (timeStamp[i] < timeStamp2[i])
-                max_array[i] = timeStamp2[i];
-        }
-        return max_array;
+        return timeStamp1;
     }
 
     public String toString()
