@@ -26,6 +26,11 @@ public class ProcessLogger {
     private ProcessLogger(){
         try {
             logFile = new File(currentProcess.getPid() + ".log");
+            if(logFile.exists())
+            {
+                if(!logFile.delete())
+                    throw new IOException("Fatal : cannot delete old log files, close this process !!!");
+            }
             if (logFile.createNewFile()) {
                 System.out.println("Log created: " + logFile.getName());
             } else {
@@ -52,11 +57,13 @@ public class ProcessLogger {
 
             switch (type){
                 case DELIVER_MESSAGE_EVENT:{
-                    bw.write("\nEVENT : DELIVER IMMEDIATELY A MESSAGE\n");
+                    bw.write("\nEVENT : DELIVER IMMEDIATELY A MESSAGE (NOT BUFFERED)\n");
                     int[]currentTime = currentProcess.getLocalClock();
                     bw.write("CURRENT CLOCK: " + Arrays.toString(currentTime));
                     bw.newLine();
                     bw.write(message.toString());
+                    bw.newLine();
+                    bw.write("SENDER : PROCESS : #" + message.getPidSender());
                     bw.newLine();
                     break;
                 }
@@ -80,7 +87,8 @@ public class ProcessLogger {
             }
             bw.close();
 
-        }catch (IOException err)
+        }
+        catch (IOException err)
         {
             err.printStackTrace();
         }
@@ -103,7 +111,8 @@ public class ProcessLogger {
             bw.newLine();
             bw.close();
 
-        }catch (IOException err)
+        }
+        catch (IOException err)
         {
             err.printStackTrace();
         }

@@ -146,7 +146,7 @@ public class Process {
         this.localClock.OverrideClock(max);
 
         // Increment clock for current process (an even occurs)
-        this.localClock.IncrementAt(pid);
+        this.localClock.IncrementAt(pid - 1);
 
         System.out.println(message.toString());
     }
@@ -174,11 +174,11 @@ public class Process {
 
     // Sending task
     private class SenderTask implements Runnable {
-        private final int messageContent;
+        private final int messageOrder;
         private final int pidToSend;
 
-        public SenderTask(int message, int pidToSend) {
-            this.messageContent = message;
+        public SenderTask(int messageOrder, int pidToSend) {
+            this.messageOrder = messageOrder;
             this.pidToSend = pidToSend;
         }
 
@@ -190,7 +190,8 @@ public class Process {
             // Compose new message to send
             localClock.IncrementAt(pid - 1);
             int[] temp = localClock.CloneTimeStamp();
-            Message newMessage = new Message(messageContent, temp, vector.CloneVector());
+            String messageContent = Integer.toString(messageOrder);
+            Message newMessage = new Message(messageContent, temp, vector.CloneVector(), pid);
             ProcessLogger.GetInstance().LogMessage(newMessage, ProcessLogger.SEND_MESSAGE_EVENT);
             // Send message
             clientToSend.SendMessage(newMessage);

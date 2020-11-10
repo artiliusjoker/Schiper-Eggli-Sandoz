@@ -5,18 +5,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Message implements Serializable{
-    private final String message;
+    private final String messageContent;
     private final ArrayList<ProcessTuple>vectorBuffer;
     private final int[] timeStamp;
+    private final int pidSender;
 
-    public Message(int message, int[] timeStamp, ArrayList<ProcessTuple> currentBuffer) {
-        this.message = "Message " + message;
+    public Message(String messageContent, int[] timeStamp, ArrayList<ProcessTuple> currentBuffer, int pidSender) {
+        this.messageContent = "Message " + messageContent;
         this.timeStamp = timeStamp;
-        vectorBuffer = currentBuffer;
+        this.vectorBuffer = currentBuffer;
+        this.pidSender = pidSender;
     }
 
-    public String getMessage() {
-        return message;
+    public int getPidSender() {
+        return pidSender;
     }
 
     public ArrayList<ProcessTuple> getVtpBuffer() {
@@ -29,8 +31,8 @@ public class Message implements Serializable{
 
     @Override
     public String toString() {
-        return "MESSAGE_CONTENT : {" +
-                "message='" + message + '\'' +
+        return "MESSAGE CONTENT : {" +
+                "message='" + messageContent + '\'' +
                 ", timestamp=" + Arrays.toString(timeStamp) +
                 ", vector_tp=" + vectorBuffer.size() +
                 '}';
